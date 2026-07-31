@@ -1,6 +1,8 @@
 # microvm-app (TypeScript / Node.js)
 
-> **Preview** — API may change. The reference implementation is
+> ⚠️ **Alpha** — this port is in early development and has had very limited
+> testing. Interfaces and behavior may change without notice; do not rely on
+> it for production workloads yet. The reference implementation is
 > [microvm-app-python](https://github.com/mikegc-aws/microvm-app-python).
 
 A zero-dependency TypeScript/Node framework for **AWS Lambda MicroVMs**.
@@ -107,3 +109,4 @@ and `mvm deploy` handles the rest.
 ```bash
 npm install && npm test
 ```
+
