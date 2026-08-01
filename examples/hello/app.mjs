@@ -25,7 +25,7 @@ app.validate(() => {
   return true;
 });
 
-app.run((ctx) => {
+app.startup((ctx) => {   // alias of app.run — Lambda's name for this hook
   // Values baked into the snapshot are shared by every VM from this image,
   // so anything unique is generated here.
   state.instanceId = randomUUID();

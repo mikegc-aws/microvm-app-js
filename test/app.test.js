@@ -174,3 +174,16 @@ test("single-port mode collapses to one listener", async () => {
     await app.shutdown();
   }
 });
+
+test("startup is an alias of run", async () => {
+  const app = new MicroVMApp({ logger: () => {} });
+  let seen;
+  app.startup((ctx) => {
+    seen = ctx.microvmId;
+  });
+  const res = await app.handle(
+    makeRequest({ path: hookPath("run"), body: JSON.stringify({ microvmId: "mvm-alias" }) })
+  );
+  assert.equal(res.status, 200);
+  assert.equal(seen, "mvm-alias");
+});

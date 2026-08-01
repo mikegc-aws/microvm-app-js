@@ -9,7 +9,7 @@
  *
  *     const app = new MicroVMApp();
  *
- *     app.run((ctx) => {
+ *     app.startup((ctx) => {   // alias of app.run — Lambda's name for the hook
  *       console.log(`MicroVM ${ctx.microvmId} started`, ctx.payload);
  *     });
  *
@@ -169,10 +169,27 @@ export class MicroVMApp {
   // Lifecycle hooks
   // ------------------------------------------------------------------
 
-  /** Hook invoked when a MicroVM starts. Traffic flows after it returns 200. */
-  run(handler: (ctx: RunContext) => HandlerResult | Promise<HandlerResult>): this {
+  /**
+   * Hook invoked when a MicroVM starts from the image snapshot.
+   *
+   * This is the recommended method for per-instance initialization:
+   * generate unique values (IDs, seeds, secrets), record the identity and
+   * task context Lambda delivers, and return quickly — the hook has a
+   * 1-60 second timeout and traffic only flows after it returns 200.
+   *
+   * `startup` and `run` are the same hook. Lambda calls it "run" (the
+   * endpoint is /aws/lambda-microvms/runtime/v1/run, and that's the name
+   * in AWS docs and CloudWatch logs); `startup` is the alias that says
+   * what the handler is for.
+   */
+  startup(handler: (ctx: RunContext) => HandlerResult | Promise<HandlerResult>): this {
     this.hooks.set("run", handler as HookHandler);
     return this;
+  }
+
+  /** Alias of {@link startup} — the platform's name for the hook. */
+  run(handler: (ctx: RunContext) => HandlerResult | Promise<HandlerResult>): this {
+    return this.startup(handler);
   }
 
   /** Hook invoked when a MicroVM resumes from the suspended state. */

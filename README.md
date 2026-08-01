@@ -12,12 +12,12 @@ application must expose — specific POST paths, specific ports, specific
 status-code semantics. Getting that plumbing right means reading the hook
 spec and standing up a web server before you write a line of business logic.
 
-This library removes that work. Register a handler with `app.run(...)` and it
-becomes your VM's startup hook; add `app.entrypoint(...)` for your application
-traffic; call `app.serve()`. The library serves all the lifecycle hook
-endpoints and your app on Node's built-in `http` server — correct paths,
-ports, and status codes included, with sensible defaults for every hook you
-don't implement.
+This library removes that work. Register a handler with `app.startup(...)`
+and it becomes your VM's instance-start hook; add `app.entrypoint(...)` for
+your application traffic; call `app.serve()`. The library serves all the
+lifecycle hook endpoints and your app on Node's built-in `http` server —
+correct paths, ports, and status codes included, with sensible defaults for
+every hook you don't implement.
 
 ## The 30-second version
 
@@ -26,7 +26,7 @@ import { MicroVMApp } from "microvm-app";
 
 const app = new MicroVMApp();
 
-app.run((ctx) => {
+app.startup((ctx) => {
   console.log(`MicroVM ${ctx.microvmId} started, payload: ${ctx.payload}`);
 });
 
@@ -34,6 +34,15 @@ app.entrypoint((req) => ({ hello: "world" }));
 
 app.serve();
 ```
+
+### A note on the name: `startup` vs `run`
+
+They are the **same hook** — use whichever you prefer. Lambda's name for it
+is `run`: the endpoint is `/aws/lambda-microvms/runtime/v1/run`, and "run"
+is what you'll see in the AWS docs, hook configuration (`microvmHooks.run`),
+and CloudWatch logs. This library adds `startup` as an alias because the
+handler's *job* is per-instance initialization. When debugging, remember:
+your code says `startup`, the platform's logs say `run`.
 
 ## How Lambda MicroVMs work (what this library maps onto)
 
@@ -50,7 +59,7 @@ app.serve();
 |---|---|---|
 | `app.ready(fn)` | `/ready` | During image build — return `false` for 503 ("not ready, retry"), truthy/`undefined` when snapshot-ready |
 | `app.validate(fn)` | `/validate` | After build, on a fresh VM. Exercise real code paths — Lambda prefetches the snapshot pages you touch |
-| `app.run(fn)` | `/run` | VM started. Receives a `RunContext` with `microvmId` and the `--run-hook-payload` string (`ctx.payloadJson()` parses it) |
+| `app.startup(fn)` (alias: `app.run(fn)`) | `/run` | VM started. Receives a `RunContext` with `microvmId` and the `--run-hook-payload` string (`ctx.payloadJson()` parses it) |
 | `app.resume(fn)` | `/resume` | VM resumed from suspend — refresh credentials, reconnect |
 | `app.suspend(fn)` | `/suspend` | Before suspend — flush writes, close connections |
 | `app.terminate(fn)` | `/terminate` | Before terminate — final cleanup |
